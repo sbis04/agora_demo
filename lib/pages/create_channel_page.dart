@@ -12,6 +12,8 @@ class CreateChannelPage extends StatefulWidget {
 }
 
 class _CreateChannelPageState extends State<CreateChannelPage> {
+  final _formKey = GlobalKey<FormState>();
+
   late final FocusNode _unfocusNode;
   late final TextEditingController _channelNameController;
 
@@ -49,6 +51,15 @@ class _CreateChannelPageState extends State<CreateChannelPage> {
         appBar: AppBar(
           backgroundColor: Colors.white,
           surfaceTintColor: Colors.white,
+          actions: [
+            IconButton(
+              onPressed: () => FirebaseAuth.instance.signOut(),
+              icon: const Icon(
+                Icons.logout,
+                color: Colors.red,
+              ),
+            )
+          ],
         ),
         body: Padding(
           padding: const EdgeInsetsDirectional.symmetric(horizontal: 24.0),
@@ -65,7 +76,7 @@ class _CreateChannelPageState extends State<CreateChannelPage> {
                     8.0,
                   ),
                   child: Text(
-                    'Create channel',
+                    'Create Channel',
                     style: TextStyle(
                       fontSize: 32.0,
                       fontWeight: FontWeight.w500,
@@ -77,7 +88,7 @@ class _CreateChannelPageState extends State<CreateChannelPage> {
                     0.0,
                     8.0,
                     0.0,
-                    24.0,
+                    16.0,
                   ),
                   child: Text(
                     'Enter a channel name to generate token. The token will be valid for 1 hour.',
@@ -88,43 +99,84 @@ class _CreateChannelPageState extends State<CreateChannelPage> {
                     ),
                   ),
                 ),
-                TextFormField(
-                  controller: _channelNameController,
-                  obscureText: false,
-                  decoration: InputDecoration(
-                    labelText: 'Channel Name',
-                    labelStyle: const TextStyle(
-                      color: lightBlue,
+                Padding(
+                  padding: const EdgeInsetsDirectional.fromSTEB(
+                    0.0,
+                    0.0,
+                    0.0,
+                    24.0,
+                  ),
+                  child: Text(
+                    '(Current user email: ${currentUser?.email})',
+                    style: const TextStyle(
+                      color: Colors.black26,
                       fontSize: 16.0,
                       fontWeight: FontWeight.normal,
                     ),
-                    hintText: 'Enter your channel name...',
-                    hintStyle: const TextStyle(
-                      color: Color(0xFF57636C),
+                  ),
+                ),
+                Form(
+                  key: _formKey,
+                  child: TextFormField(
+                    controller: _channelNameController,
+                    obscureText: false,
+                    decoration: InputDecoration(
+                      labelText: 'Channel Name',
+                      labelStyle: const TextStyle(
+                        color: lightBlue,
+                        fontSize: 16.0,
+                        fontWeight: FontWeight.normal,
+                      ),
+                      hintText: 'Enter your channel name...',
+                      hintStyle: const TextStyle(
+                        color: Color(0xFF57636C),
+                        fontSize: 16.0,
+                        fontWeight: FontWeight.normal,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(
+                          color: lightBlue,
+                          width: 1.0,
+                        ),
+                        borderRadius: BorderRadius.circular(12.0),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(
+                          color: lightBlue,
+                          width: 2.0,
+                        ),
+                        borderRadius: BorderRadius.circular(12.0),
+                      ),
+                      errorBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(
+                          color: Colors.red,
+                          width: 1.0,
+                        ),
+                        borderRadius: BorderRadius.circular(12.0),
+                      ),
+                      focusedErrorBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(
+                          color: Colors.red,
+                          width: 2.0,
+                        ),
+                        borderRadius: BorderRadius.circular(12.0),
+                      ),
+                    ),
+                    style: const TextStyle(
+                      color: Colors.black,
                       fontSize: 16.0,
                       fontWeight: FontWeight.normal,
                     ),
-                    enabledBorder: OutlineInputBorder(
-                      borderSide: const BorderSide(
-                        color: lightBlue,
-                        width: 1.0,
-                      ),
-                      borderRadius: BorderRadius.circular(12.0),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: const BorderSide(
-                        color: lightBlue,
-                        width: 2.0,
-                      ),
-                      borderRadius: BorderRadius.circular(12.0),
-                    ),
+                    keyboardType: TextInputType.text,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter a channel name';
+                      } else if (value.length > 64) {
+                        return 'Channel name must be less than 64 characters';
+                      }
+                      return null;
+                    },
                   ),
-                  style: const TextStyle(
-                    color: Colors.black,
-                    fontSize: 16.0,
-                    fontWeight: FontWeight.normal,
-                  ),
-                  keyboardType: TextInputType.emailAddress,
                 ),
                 const SizedBox(height: 24.0),
                 _isCreatingChannel
@@ -136,41 +188,52 @@ class _CreateChannelPageState extends State<CreateChannelPage> {
                         width: double.infinity,
                         height: 55,
                         child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.black,
+                          ),
                           onPressed: () async {
-                            showDialog(
-                              context: context,
-                              builder: (context) => PreJoiningDialog(),
-                            );
-
-                            // setState(() => _isCreatingChannel = true);
-                            // final input = <String, dynamic>{
-                            //   'channelName': _channelNameController.text,
-                            // };
-                            // try {
-                            //   final response = await FirebaseFunctions.instance
-                            //       .httpsCallable(
-                            //         'generateToken',
-                            //         options: HttpsCallableOptions(),
-                            //       )
-                            //       .call(input);
-                            //   final token = response.data as String?;
-                            //   if (token != null) {
-                            //     // ignore: use_build_context_synchronously
-                            //     showSnackBar(
-                            //       context,
-                            //       'Token generated successfully!',
-                            //     );
-                            //   }
-                            // } catch (e) {
-                            //   showSnackBar(
-                            //     context,
-                            //     'Error generating token: $e',
-                            //   );
-                            // } finally {
-                            //   setState(() => _isCreatingChannel = false);
-                            // }
+                            if (!_formKey.currentState!.validate()) {
+                              return;
+                            }
+                            setState(() => _isCreatingChannel = true);
+                            final input = <String, dynamic>{
+                              'channelName': _channelNameController.text,
+                            };
+                            try {
+                              final response = await FirebaseFunctions.instance
+                                  .httpsCallable('generateToken')
+                                  .call(input);
+                              final token = response.data as String?;
+                              if (token != null) {
+                                if (context.mounted) {
+                                  showSnackBar(
+                                    context,
+                                    'Token generated successfully!',
+                                  );
+                                }
+                                await Future.delayed(
+                                  const Duration(seconds: 1),
+                                );
+                                if (context.mounted) {
+                                  await showDialog(
+                                    context: context,
+                                    builder: (context) => PreJoiningDialog(
+                                      channelName: _channelNameController.text,
+                                      token: token,
+                                    ),
+                                  );
+                                }
+                              }
+                            } catch (e) {
+                              showSnackBar(
+                                context,
+                                'Error generating token: $e',
+                              );
+                            } finally {
+                              setState(() => _isCreatingChannel = false);
+                            }
                           },
-                          child: const Text('Generate Token'),
+                          child: const Text('Join Room'),
                         ),
                       ),
               ],

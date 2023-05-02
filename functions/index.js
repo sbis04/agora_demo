@@ -12,7 +12,7 @@ exports.generateToken = functions.https.onCall(async (data, context) => {
   const appId = process.env.APP_ID;
   const appCertificate = process.env.APP_CERTIFICATE;
   const channelName = data.channelName;
-  const uid = context.auth.uid;
+  const uid = 0;
   const role = RtcRole.PUBLISHER;
 
   const expirationTimeInSeconds = 3600; // 1 hour

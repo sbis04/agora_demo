@@ -43,7 +43,14 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-      home: currentUser == null ? const LoginPage() : const CreateChannelPage(),
+      home: StreamBuilder(
+        stream: FirebaseAuth.instance.authStateChanges(),
+        builder: (context, snapshot) =>
+            snapshot.hasData && snapshot.data != null
+                ? const CreateChannelPage()
+                : const LoginPage(),
+      ),
+      // home: currentUser == null ? const LoginPage() : const CreateChannelPage(),
     );
   }
 }

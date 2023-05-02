@@ -1,9 +1,20 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_agora_demo/pages/video_call_page.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class PreJoiningDialog extends StatefulWidget {
-  const PreJoiningDialog({super.key});
+  const PreJoiningDialog({
+    super.key,
+    required this.token,
+    required this.channelName,
+    this.isBroadcaster = false,
+  });
+
+  final String token;
+  final String channelName;
+  final bool isBroadcaster;
 
   @override
   State<PreJoiningDialog> createState() => _PreJoiningDialogState();
@@ -12,6 +23,7 @@ class PreJoiningDialog extends StatefulWidget {
 class _PreJoiningDialogState extends State<PreJoiningDialog> {
   bool _isMicEnabled = false;
   bool _isCameraEnabled = false;
+  bool _isJoining = false;
 
   _getMicPermissions() async {
     if (!kIsWeb) {
@@ -129,17 +141,42 @@ class _PreJoiningDialogState extends State<PreJoiningDialog> {
               children: [
                 SizedBox(
                   width: 120.0,
-                  child: ElevatedButton(
-                    // style: ElevatedButton.styleFrom(
-                    //   splashFactory: InkRipple.splashFactory,
-                    //   // backgroundColor: lightBlue,
-                    //   shape: RoundedRectangleBorder(
-                    //     borderRadius: BorderRadius.circular(12.0),
-                    //   ),
-                    // ),
-                    onPressed: () async {},
-                    child: const Text('Join'),
-                  ),
+                  child: _isJoining
+                      ? const CircularProgressIndicator()
+                      : ElevatedButton(
+                          onPressed: () async {
+                            setState(() => _isJoining = true);
+                            await dotenv.load(fileName: "functions/.env");
+                            final appId = dotenv.env['APP_ID'];
+                            print('appId: $appId');
+                            print('token: ${widget.token}');
+                            print('channelName: ${widget.channelName}');
+                            print('isMicEnabled: $_isMicEnabled');
+                            print('isCameraEnabled: $_isCameraEnabled');
+                            print('isBroadcaster: ${widget.isBroadcaster}');
+                            if (appId == null) {
+                              throw Exception(
+                                  'Please add your APP_ID to .env file');
+                            }
+                            setState(() => _isJoining = false);
+                            if (context.mounted) {
+                              Navigator.of(context).pop();
+                              await Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => VideoCallPage(
+                                    appId: appId,
+                                    token: widget.token,
+                                    channelName: widget.channelName,
+                                    isMicEnabled: _isMicEnabled,
+                                    isVideoEnabled: _isCameraEnabled,
+                                    // isBroadcaster: widget.isBroadcaster,
+                                  ),
+                                ),
+                              );
+                            }
+                          },
+                          child: const Text('Join'),
+                        ),
                 ),
               ],
             ),
