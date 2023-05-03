@@ -18,6 +18,10 @@
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
 	<string>$(FLUTTER_BUILD_NAME)</string>
+	<key>NSCameraUsageDescription</key>
+    <string>In order to join a video call, this app requires permission to access the camera.</string>
+	<key>NSMicrophoneUsageDescription</key>
+    <string>In order to join a video call, this app requires permission to access the microphone.</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSMinimumSystemVersion</key>

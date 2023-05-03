@@ -1,11 +1,13 @@
 import 'dart:io';
+import 'dart:math';
 
 import 'package:agora_rtc_engine/rtc_engine.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:agora_rtc_engine/rtc_local_view.dart' as rtc_local_view;
 import 'package:agora_rtc_engine/rtc_remote_view.dart' as rtc_remote_view;
 import 'package:flutter_agora_demo/res/palette.dart';
-import 'package:flutter_agora_demo/utils/remote_user.dart';
+import 'package:flutter_agora_demo/utils/agora_user.dart';
 import 'package:flutter_agora_demo/widgets/call_actions_row.dart';
 
 class VideoCallPage extends StatefulWidget {
@@ -30,9 +32,10 @@ class VideoCallPage extends StatefulWidget {
 
 class _VideoCallPageState extends State<VideoCallPage> {
   late final RtcEngine _agoraEngine;
-  late final VideoDimensions _videoDimensions;
+  late double _viewAspectRatio;
+  // late final VideoDimensions _videoDimensions;
 
-  final _users = <AgoraUser>{};
+  Set<AgoraUser> _users = <AgoraUser>{};
   int? _currentUid;
 
   bool _isMicEnabled = false;
@@ -57,12 +60,27 @@ class _VideoCallPageState extends State<VideoCallPage> {
   }
 
   Future<void> _initialize() async {
-    if (Platform.isAndroid || Platform.isIOS) {
-      _videoDimensions = const VideoDimensions(width: 1080, height: 1980);
+    if (kIsWeb) {
+      _viewAspectRatio = 3 / 2;
+      // _videoDimensions = const VideoDimensions(width: 1920, height: 1080);
+    } else if (Platform.isAndroid || Platform.isIOS) {
+      _viewAspectRatio = 2 / 3;
+      // _videoDimensions = const VideoDimensions(width: 1080, height: 1980);
     } else {
-      _videoDimensions = const VideoDimensions(width: 1920, height: 1080);
+      _viewAspectRatio = 3 / 2;
+      // _videoDimensions = const VideoDimensions(width: 1920, height: 1080);
     }
     setState(() {
+      // _users.addAll(
+      //   List.generate(
+      //     11,
+      //     (index) => AgoraUser(
+      //       uid: index,
+      //       isAudioEnabled: true,
+      //       isVideoEnabled: false,
+      //     ),
+      //   ),
+      // );
       _isMicEnabled = widget.isMicEnabled;
       _isVideoEnabled = widget.isVideoEnabled;
     });
@@ -84,7 +102,7 @@ class _VideoCallPageState extends State<VideoCallPage> {
   Future<void> _initAgoraRtcEngine() async {
     _agoraEngine = await RtcEngine.create(widget.appId);
     VideoEncoderConfiguration configuration = VideoEncoderConfiguration();
-    configuration.dimensions = _videoDimensions;
+    // configuration.dimensions = _videoDimensions;
     configuration.orientationMode = VideoOutputOrientationMode.Adaptative;
     await _agoraEngine.setVideoEncoderConfiguration(configuration);
     await _agoraEngine.enableAudio();
@@ -100,38 +118,19 @@ class _VideoCallPageState extends State<VideoCallPage> {
       RtcEngineEventHandler(
         error: (code) {
           final info = 'LOG::onError: $code';
-          print(info);
+          debugPrint(info);
         },
-        // localUserRegistered: (uid, userAccount) {
-        //   final info =
-        //       'LOG::localUserRegistered: $uid, userAccount: $userAccount';
-        //   print(info);
-        //   setState(() {
-        //     _currentUid = uid;
-        //     _users.add(
-        //       AgoraUser(
-        //         uid: uid,
-        //         userAccount: userAccount,
-        //         videoHeight: 1080,
-        //         videoWidth: 1920,
-        //         isAudioEnabled: _isMicEnabled,
-        //         isVideoEnabled: _isVideoEnabled,
-        //         view: const rtc_local_view.SurfaceView(),
-        //       ),
-        //     );
-        //   });
-        // },
         joinChannelSuccess: (channel, uid, elapsed) {
           final info = 'LOG::onJoinChannel: $channel, uid: $uid';
-          print(info);
+          debugPrint(info);
           setState(() {
             _currentUid = uid;
             _users.add(
               AgoraUser(
                 uid: uid,
                 // userAccount: userAccount,
-                videoWidth: _videoDimensions.width,
-                videoHeight: _videoDimensions.height,
+                // videoWidth: _videoDimensions.width,
+                // videoHeight: _videoDimensions.height,
                 isAudioEnabled: _isMicEnabled,
                 isVideoEnabled: _isVideoEnabled,
                 view: const rtc_local_view.SurfaceView(),
@@ -141,7 +140,7 @@ class _VideoCallPageState extends State<VideoCallPage> {
         },
         firstLocalAudioFrame: (elapsed) {
           final info = 'LOG::firstLocalAudio: $elapsed';
-          print(info);
+          debugPrint(info);
           for (AgoraUser user in _users) {
             if (user.uid == _currentUid) {
               setState(() => user.isAudioEnabled = _isMicEnabled);
@@ -150,56 +149,38 @@ class _VideoCallPageState extends State<VideoCallPage> {
         },
         firstLocalVideoFrame: (width, height, elapsed) {
           final info = 'LOG::firstLocalVideo: $width x $height';
-          print(info);
+          debugPrint(info);
           for (AgoraUser user in _users) {
             if (user.uid == _currentUid) {
               setState(
                 () => user
-                  ..videoWidth = width
-                  ..videoHeight = height
+                  // ..videoWidth = width
+                  // ..videoHeight = height
                   ..isVideoEnabled = _isVideoEnabled
-                  ..view = const rtc_local_view.SurfaceView(),
+                  ..view = const rtc_local_view.SurfaceView(
+                    renderMode: VideoRenderMode.Hidden,
+                  ),
               );
             }
           }
         },
-        localVideoStateChanged: (localVideoState, error) {
-          final info = 'LOG::localVideoStateChanged: $localVideoState, $error';
-          // for (AgoraUser user in _users) {
-          //   if (user.uid == _currentUid) {
-          //     setState(() => user.isVideoEnabled =
-          //         localVideoState != LocalVideoStreamState.Stopped);
-          //   }
-          // }
-          print(info);
-        },
-        localAudioStateChanged: (state, error) {
-          final info = 'LOG::localAudioStateChanged: $state, $error';
-          // for (AgoraUser user in _users) {
-          //   if (user.uid == _currentUid) {
-          //     setState(
-          //         () => user.isAudioEnabled = state != AudioLocalState.Stopped);
-          //   }
-          // }
-          print(info);
-        },
         leaveChannel: (stats) {
-          print('LOG::onLeaveChannel');
+          debugPrint('LOG::onLeaveChannel');
           setState(() => _users.clear());
         },
         userInfoUpdated: (uid, userInfo) {
           final info = 'LOG::userInfoUpdated: $uid, ${userInfo.userAccount}';
-          print(info);
+          debugPrint(info);
         },
         userJoined: (uid, elapsed) {
           final info = 'LOG::userJoined: $uid';
-          print(info);
+          debugPrint(info);
           setState(
             () => _users.add(
               AgoraUser(
                 uid: uid,
-                videoWidth: _videoDimensions.width,
-                videoHeight: _videoDimensions.height,
+                // videoWidth: _videoDimensions.width,
+                // videoHeight: _videoDimensions.height,
                 view: rtc_remote_view.SurfaceView(
                   channelId: widget.channelName,
                   uid: uid,
@@ -210,7 +191,7 @@ class _VideoCallPageState extends State<VideoCallPage> {
         },
         userOffline: (uid, elapsed) {
           final info = 'LOG::userOffline: $uid';
-          print(info);
+          debugPrint(info);
           AgoraUser? userToRemove;
           for (AgoraUser user in _users) {
             if (user.uid == uid) {
@@ -221,7 +202,7 @@ class _VideoCallPageState extends State<VideoCallPage> {
         },
         firstRemoteAudioFrame: (uid, elapsed) {
           final info = 'LOG::firstRemoteAudio: $uid';
-          print(info);
+          debugPrint(info);
           for (AgoraUser user in _users) {
             if (user.uid == uid) {
               setState(() => user.isAudioEnabled = true);
@@ -230,13 +211,13 @@ class _VideoCallPageState extends State<VideoCallPage> {
         },
         firstRemoteVideoFrame: (uid, width, height, elapsed) {
           final info = 'LOG::firstRemoteVideo: $uid ${width}x $height';
-          print(info);
+          debugPrint(info);
           for (AgoraUser user in _users) {
             if (user.uid == uid) {
               setState(
                 () => user
-                  ..videoWidth = width
-                  ..videoHeight = height
+                  // ..videoWidth = width
+                  // ..videoHeight = height
                   ..isVideoEnabled = true
                   ..view = rtc_remote_view.SurfaceView(
                     channelId: widget.channelName,
@@ -248,7 +229,7 @@ class _VideoCallPageState extends State<VideoCallPage> {
         },
         remoteVideoStateChanged: (uid, state, reason, elapsed) {
           final info = 'LOG::remoteVideoStateChanged: $uid $state $reason';
-          print(info);
+          debugPrint(info);
           for (AgoraUser user in _users) {
             if (user.uid == uid) {
               setState(() =>
@@ -258,7 +239,7 @@ class _VideoCallPageState extends State<VideoCallPage> {
         },
         remoteAudioStateChanged: (uid, state, reason, elapsed) {
           final info = 'LOG::remoteAudioStateChanged: $uid $state $reason';
-          print(info);
+          debugPrint(info);
           for (AgoraUser user in _users) {
             if (user.uid == uid) {
               setState(() =>
@@ -303,7 +284,6 @@ class _VideoCallPageState extends State<VideoCallPage> {
 
   void _onSwitchCamera() => _agoraEngine.switchCamera();
 
-  /// Video layout wrapper
   Widget _viewRows() {
     switch (_users.length) {
       case 1:
@@ -314,6 +294,7 @@ class _VideoCallPageState extends State<VideoCallPage> {
         );
       case 2:
         return Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             _expandedVideoRow({_users.elementAt(0)}),
             _expandedVideoRow({_users.elementAt(1)}),
@@ -321,6 +302,7 @@ class _VideoCallPageState extends State<VideoCallPage> {
         );
       case 3:
         return Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             _expandedVideoRow({_users.elementAt(0), _users.elementAt(1)}),
             _expandedVideoRow({_users.elementAt(2)}),
@@ -328,6 +310,7 @@ class _VideoCallPageState extends State<VideoCallPage> {
         );
       case 4:
         return Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             _expandedVideoRow({_users.elementAt(0), _users.elementAt(1)}),
             _expandedVideoRow({_users.elementAt(2), _users.elementAt(3)}),
@@ -338,60 +321,140 @@ class _VideoCallPageState extends State<VideoCallPage> {
     return Container();
   }
 
-  Widget _videoView(AgoraUser user) => Expanded(
-        child: user.videoHeight == null || user.videoWidth == null
-            ? const SizedBox.expand()
-            : Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: AspectRatio(
-                  aspectRatio: user.videoHeight! / user.videoWidth!,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade900,
-                      borderRadius: BorderRadius.circular(10.0),
-                      border: Border.all(
-                        color: user.isAudioEnabled ?? false
-                            ? lightBlue
-                            : Colors.red,
-                        width: 2.0,
-                        style: BorderStyle.solid,
-                      ),
-                    ),
-                    child: Stack(
-                      children: [
-                        Center(
-                          child: CircleAvatar(
-                            backgroundColor: Colors.grey.shade800,
-                            maxRadius: 36,
-                            child: Icon(
-                              Icons.person,
-                              color: Colors.grey.shade600,
-                              size: 40.0,
-                            ),
-                          ),
-                        ),
-                        if (user.isVideoEnabled ?? false)
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(8.0),
-                            child: user.view,
-                          ),
-                      ],
-                    ),
-                  ),
+  List<int> horizontalLayout(int n) {
+    int rows = (sqrt(n).ceil());
+    int columns = (n / rows).ceil();
+
+    List<int> layout = List<int>.filled(rows, columns);
+    int remainingScreens = rows * columns - n;
+
+    for (int i = 0; i < remainingScreens; i++) {
+      layout[layout.length - 1 - i] -= 1;
+    }
+
+    return layout;
+  }
+
+  List<int> verticalLayout(int n) {
+    int columns = (sqrt(n)).floor();
+    int rows = (n / columns).ceil();
+
+    while (columns * (rows - 1) >= n) {
+      rows -= 1;
+    }
+
+    List<int> layout = List<int>.filled(columns, rows);
+    int remainingScreens = rows * columns - n;
+
+    for (int i = 0; i < remainingScreens; i++) {
+      layout[layout.length - 1 - i] -= 1;
+    }
+
+    return layout;
+  }
+
+  Widget _videoView(AgoraUser user) => Flexible(
+        child: Padding(
+          padding: const EdgeInsets.all(2.0),
+          child: AspectRatio(
+            aspectRatio: _viewAspectRatio,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.grey.shade900,
+                borderRadius: BorderRadius.circular(8.0),
+                border: Border.all(
+                  color: user.isAudioEnabled ?? false ? lightBlue : Colors.red,
+                  width: 2.0,
                 ),
               ),
+              child: Stack(
+                children: [
+                  Center(
+                    child: CircleAvatar(
+                      backgroundColor: Colors.grey.shade800,
+                      maxRadius: 18,
+                      child: Icon(
+                        Icons.person,
+                        color: Colors.grey.shade600,
+                        size: 24.0,
+                      ),
+                    ),
+                  ),
+                  if (user.isVideoEnabled ?? false)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8 - 2),
+                      child: user.view,
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
       );
 
-  /// Video view row wrapper
   Widget _expandedVideoRow(Set<AgoraUser> users) {
     final wrappedViews = users.map<Widget>(_videoView).toList();
-    return Expanded(child: Row(children: wrappedViews));
+    return Flexible(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: wrappedViews,
+      ),
+    );
+  }
+
+  //  Widget _videoRow(int views, int rowCount) {
+  //   List<AgoraUser> users = [];
+  //   final wrappedViews = users.map<Widget>(_videoView).toList();
+  //   return Flexible(
+  //     child: Row(
+  //       mainAxisAlignment: MainAxisAlignment.center,
+  //       children: wrappedViews,
+  //     ),
+  //   );
+  // }
+
+  Widget _generateLayout(List<int> views) {
+    int totalCount = views.reduce((value, element) => value + element);
+    int rows = views.length;
+    int columns = views.reduce(max);
+
+    List<Widget> rowsList = [];
+    for (int i = 0; i < rows; i++) {
+      List<Widget> rowChildren = [];
+      for (int j = 0; j < columns; j++) {
+        int index = i * columns + j;
+        if (index < totalCount) {
+          rowChildren.add(_videoView(_users.elementAt(index)));
+        } else {
+          rowChildren.add(const SizedBox.shrink());
+        }
+      }
+      rowsList.add(
+        Flexible(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: rowChildren,
+          ),
+        ),
+      );
+    }
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: rowsList,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    // print('CURRENT USER: ${_currentUid}, ${_currentUser.uid}}');
-    // print('USERS: ${_users.map((e) => '${e.uid}: ${e.userAccount}')}');
+    // _users = List.generate(
+    //   10,
+    //   (index) => AgoraUser(
+    //     uid: index,
+    //     isAudioEnabled: true,
+    //     isVideoEnabled: false,
+    //   ),
+    // ).toSet();
+
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -449,7 +512,42 @@ class _VideoCallPageState extends State<VideoCallPage> {
       body: SafeArea(
         child: Column(
           children: [
-            Expanded(child: _viewRows()),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: OrientationBuilder(
+                  builder: (context, orientation) {
+                    final isPortrait = orientation == Orientation.portrait;
+                    debugPrint('LOG::isPortrait=$isPortrait');
+                    if (_users.isEmpty) {
+                      return const SizedBox();
+                    }
+                    WidgetsBinding.instance.addPostFrameCallback(
+                      (_) => setState(
+                          () => _viewAspectRatio = isPortrait ? 2 / 3 : 3 / 2),
+                    );
+                    List<int> layoutViews = horizontalLayout(_users.length);
+                    // List<int> layoutViews = horizontalLayout(_users.length);
+                    // List<int> layoutViews = isPortrait
+                    //     ? verticalLayout(_users.length)
+                    //     : horizontalLayout(_users.length);
+                    // for (AgoraUser user in _users) {
+                    //   if (user.uid == _currentUid) {
+                    //     user
+                    //       ..videoWidth = orientation == Orientation.portrait
+                    //           ? _videoDimensions.width
+                    //           : _videoDimensions.height
+                    //       ..videoHeight = orientation == Orientation.portrait
+                    //           ? _videoDimensions.height
+                    //           : _videoDimensions.width;
+                    //   }
+                    // }
+                    return _generateLayout(layoutViews);
+                  },
+                ),
+                // child: _viewRows(),
+              ),
+            ),
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 16.0),
               child: CallActionsRow(

@@ -15,10 +15,8 @@ exports.generateToken = functions.https.onCall(async (data, context) => {
   const uid = 0;
   const role = RtcRole.PUBLISHER;
 
-  const expirationTimeInSeconds = 3600; // 1 hour
-
+  const expirationTimeInSeconds = data.expiryTime;
   const currentTimestamp = Math.floor(Date.now() / 1000);
-
   const privilegeExpiredTs = currentTimestamp + expirationTimeInSeconds;
 
   // Build token with uid

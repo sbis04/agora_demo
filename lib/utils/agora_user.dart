@@ -4,8 +4,8 @@ class AgoraUser {
   final int uid;
   final String? userAccount;
   String? name;
-  int? videoWidth;
-  int? videoHeight;
+  // int? videoWidth;
+  // int? videoHeight;
   bool? isAudioEnabled;
   bool? isVideoEnabled;
   Widget? view;
@@ -14,8 +14,8 @@ class AgoraUser {
     required this.uid,
     this.userAccount,
     this.name,
-    this.videoWidth,
-    this.videoHeight,
+    // this.videoWidth,
+    // this.videoHeight,
     this.isAudioEnabled,
     this.isVideoEnabled,
     this.view,

@@ -21,31 +21,34 @@ class CallActionsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: <Widget>[
-        CallActionButton(
-          callEnd: true,
-          icon: Icons.call_end,
-          onTap: onCallEnd,
-        ),
-        CallActionButton(
-          icon: isMicEnabled ? Icons.mic : Icons.mic_off,
-          isEnabled: isMicEnabled,
-          onTap: onToggleAudio,
-        ),
-        CallActionButton(
-          icon: isVideoEnabled
-              ? Icons.videocam_rounded
-              : Icons.videocam_off_rounded,
-          isEnabled: isVideoEnabled,
-          onTap: onToggleCamera,
-        ),
-        CallActionButton(
-          icon: Icons.cameraswitch_rounded,
-          onTap: onSwitchCamera,
-        ),
-      ],
+    return SizedBox(
+      width: 400,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: <Widget>[
+          CallActionButton(
+            callEnd: true,
+            icon: Icons.call_end,
+            onTap: onCallEnd,
+          ),
+          CallActionButton(
+            icon: isMicEnabled ? Icons.mic : Icons.mic_off,
+            isEnabled: isMicEnabled,
+            onTap: onToggleAudio,
+          ),
+          CallActionButton(
+            icon: isVideoEnabled
+                ? Icons.videocam_rounded
+                : Icons.videocam_off_rounded,
+            isEnabled: isVideoEnabled,
+            onTap: onToggleCamera,
+          ),
+          CallActionButton(
+            icon: Icons.cameraswitch_rounded,
+            onTap: onSwitchCamera,
+          ),
+        ],
+      ),
     );
   }
 }
