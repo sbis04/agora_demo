@@ -1,5 +1,4 @@
 import 'package:cloud_functions/cloud_functions.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_agora_demo/res/palette.dart';
 import 'package:flutter_agora_demo/widgets/pre_joining_dialog.dart';
@@ -19,8 +18,6 @@ class _CreateChannelPageState extends State<CreateChannelPage> {
 
   bool _isCreatingChannel = false;
 
-  User? get currentUser => FirebaseAuth.instance.currentUser;
-
   @override
   void initState() {
     super.initState();
@@ -34,12 +31,65 @@ class _CreateChannelPageState extends State<CreateChannelPage> {
     super.dispose();
   }
 
-  showSnackBar(BuildContext context, String text) {
+  void _showSnackBar(BuildContext context, String text) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(text),
       ),
     );
+  }
+
+  String? _channelNameValidator(value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter a channel name';
+    } else if (value.length > 64) {
+      return 'Channel name must be less than 64 characters';
+    }
+    return null;
+  }
+
+  Future<void> _joinRoom() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+    FocusScope.of(context).requestFocus(_unfocusNode);
+    setState(() => _isCreatingChannel = true);
+    final input = <String, dynamic>{
+      'channelName': _channelNameController.text,
+    };
+    try {
+      final response = await FirebaseFunctions.instance
+          .httpsCallable('generateToken')
+          .call(input);
+      final token = response.data as String?;
+      if (token != null) {
+        if (context.mounted) {
+          _showSnackBar(
+            context,
+            'Token generated successfully!',
+          );
+        }
+        await Future.delayed(
+          const Duration(seconds: 1),
+        );
+        if (context.mounted) {
+          await showDialog(
+            context: context,
+            builder: (context) => PreJoiningDialog(
+              channelName: _channelNameController.text,
+              token: token,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      _showSnackBar(
+        context,
+        'Error generating token: $e',
+      );
+    } finally {
+      setState(() => _isCreatingChannel = false);
+    }
   }
 
   @override
@@ -52,15 +102,6 @@ class _CreateChannelPageState extends State<CreateChannelPage> {
         appBar: AppBar(
           backgroundColor: Colors.white,
           surfaceTintColor: Colors.white,
-          actions: [
-            IconButton(
-              onPressed: () => FirebaseAuth.instance.signOut(),
-              icon: const Icon(
-                Icons.logout,
-                color: Colors.red,
-              ),
-            )
-          ],
         ),
         body: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -92,32 +133,11 @@ class _CreateChannelPageState extends State<CreateChannelPage> {
                         ),
                       ),
                       const Padding(
-                        padding: EdgeInsetsDirectional.fromSTEB(
-                          0.0,
-                          8.0,
-                          0.0,
-                          16.0,
-                        ),
+                        padding: EdgeInsetsDirectional.only(bottom: 24.0),
                         child: Text(
                           'Enter a channel name to generate token. The token will be valid for 1 hour.',
                           style: TextStyle(
-                            color: Color(0xFF797979),
-                            fontSize: 16.0,
-                            fontWeight: FontWeight.normal,
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsetsDirectional.fromSTEB(
-                          0.0,
-                          0.0,
-                          0.0,
-                          24.0,
-                        ),
-                        child: Text(
-                          '(Current user email: ${currentUser?.email})',
-                          style: const TextStyle(
-                            color: Colors.black26,
+                            color: Colors.grey,
                             fontSize: 16.0,
                             fontWeight: FontWeight.normal,
                           ),
@@ -126,6 +146,7 @@ class _CreateChannelPageState extends State<CreateChannelPage> {
                       Form(
                         key: _formKey,
                         child: TextFormField(
+                          autofocus: true,
                           controller: _channelNameController,
                           obscureText: false,
                           decoration: InputDecoration(
@@ -176,14 +197,7 @@ class _CreateChannelPageState extends State<CreateChannelPage> {
                             fontWeight: FontWeight.normal,
                           ),
                           keyboardType: TextInputType.text,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter a channel name';
-                            } else if (value.length > 64) {
-                              return 'Channel name must be less than 64 characters';
-                            }
-                            return null;
-                          },
+                          validator: _channelNameValidator,
                         ),
                       ),
                       const SizedBox(height: 24.0),
@@ -199,51 +213,7 @@ class _CreateChannelPageState extends State<CreateChannelPage> {
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.black,
                                 ),
-                                onPressed: () async {
-                                  if (!_formKey.currentState!.validate()) {
-                                    return;
-                                  }
-                                  setState(() => _isCreatingChannel = true);
-                                  final input = <String, dynamic>{
-                                    'channelName': _channelNameController.text,
-                                  };
-                                  try {
-                                    final response = await FirebaseFunctions
-                                        .instance
-                                        .httpsCallable('generateToken')
-                                        .call(input);
-                                    final token = response.data as String?;
-                                    if (token != null) {
-                                      if (context.mounted) {
-                                        showSnackBar(
-                                          context,
-                                          'Token generated successfully!',
-                                        );
-                                      }
-                                      await Future.delayed(
-                                        const Duration(seconds: 1),
-                                      );
-                                      if (context.mounted) {
-                                        await showDialog(
-                                          context: context,
-                                          builder: (context) =>
-                                              PreJoiningDialog(
-                                            channelName:
-                                                _channelNameController.text,
-                                            token: token,
-                                          ),
-                                        );
-                                      }
-                                    }
-                                  } catch (e) {
-                                    showSnackBar(
-                                      context,
-                                      'Error generating token: $e',
-                                    );
-                                  } finally {
-                                    setState(() => _isCreatingChannel = false);
-                                  }
-                                },
+                                onPressed: _joinRoom,
                                 child: const Text('Join Room'),
                               ),
                             ),

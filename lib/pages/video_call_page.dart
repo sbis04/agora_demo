@@ -348,7 +348,6 @@ class _VideoCallPageState extends State<VideoCallPage> {
                     );
                   },
                 ),
-                // child: _viewRows(),
               ),
             ),
             Padding(

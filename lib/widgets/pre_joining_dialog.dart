@@ -27,10 +27,9 @@ class _PreJoiningDialogState extends State<PreJoiningDialog> {
   bool _isCameraEnabled = false;
   bool _isJoining = false;
 
-  _getMicPermissions() async {
+  Future<void> _getMicPermissions() async {
     if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
       final micPermission = await Permission.microphone.request();
-      print(micPermission);
       if (micPermission == PermissionStatus.granted) {
         setState(() => _isMicEnabled = true);
       }
@@ -39,10 +38,9 @@ class _PreJoiningDialogState extends State<PreJoiningDialog> {
     }
   }
 
-  _getCameraPermissions() async {
+  Future<void> _getCameraPermissions() async {
     if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
       final cameraPermission = await Permission.camera.request();
-      print(cameraPermission);
       if (cameraPermission == PermissionStatus.granted) {
         setState(() => _isCameraEnabled = true);
       }
@@ -51,7 +49,7 @@ class _PreJoiningDialogState extends State<PreJoiningDialog> {
     }
   }
 
-  _getPermissions() async {
+  Future<void> _getPermissions() async {
     await _getMicPermissions();
     await _getCameraPermissions();
   }
@@ -158,12 +156,6 @@ class _PreJoiningDialogState extends State<PreJoiningDialog> {
                               setState(() => _isJoining = true);
                               await dotenv.load(fileName: "functions/.env");
                               final appId = dotenv.env['APP_ID'];
-                              print('appId: $appId');
-                              print('token: ${widget.token}');
-                              print('channelName: ${widget.channelName}');
-                              print('isMicEnabled: $_isMicEnabled');
-                              print('isCameraEnabled: $_isCameraEnabled');
-                              print('isBroadcaster: ${widget.isBroadcaster}');
                               if (appId == null) {
                                 throw Exception(
                                     'Please add your APP_ID to .env file');
@@ -179,7 +171,6 @@ class _PreJoiningDialogState extends State<PreJoiningDialog> {
                                       channelName: widget.channelName,
                                       isMicEnabled: _isMicEnabled,
                                       isVideoEnabled: _isCameraEnabled,
-                                      // isBroadcaster: widget.isBroadcaster,
                                     ),
                                   ),
                                 );
