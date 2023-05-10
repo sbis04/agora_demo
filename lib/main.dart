@@ -1,7 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_agora_demo/pages/create_channel_page.dart';
-import 'package:flutter_agora_demo/res/palette.dart';
 import 'package:flutter_agora_demo/utils/firebase_config.dart';
 
 Future<void> main() async {
@@ -27,7 +26,7 @@ class MyApp extends StatelessWidget {
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: lightBlue,
+            backgroundColor: Colors.blue,
             foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12.0),
