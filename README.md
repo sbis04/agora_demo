@@ -6,7 +6,7 @@ A [Flutter](https://flutter.dev) app for demonstrating [Agora](https://www.agora
 
 ![Agora Mobile App Screenshots](screenshots/agora_mobile_view.png)
 
-The app will consist of two primary pages:
+The app consists of two primary pages:
 
 * **Create Channel Page:** This page will serve as the starting point for users to initiate a video call. They will be able to enter a channel name, which will be used to create a unique video call room. Users will also get a dialog for selecting their preference for microphone and camera on/off before joining the call. By clicking the "Join" button, users will be directed to the Video Call Page, where they'll be able to participate in the video call with other users who have joined the same channel.
 
