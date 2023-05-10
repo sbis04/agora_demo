@@ -6,7 +6,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:agora_rtc_engine/rtc_local_view.dart' as rtc_local_view;
 import 'package:agora_rtc_engine/rtc_remote_view.dart' as rtc_remote_view;
-import 'package:flutter_agora_demo/res/palette.dart';
 import 'package:flutter_agora_demo/utils/agora_user.dart';
 import 'package:flutter_agora_demo/widgets/call_actions_row.dart';
 
@@ -48,11 +47,11 @@ class _VideoCallPageState extends State<VideoCallPage> {
   @override
   void dispose() {
     _users.clear();
-    _dispose();
+    _disposeAgora();
     super.dispose();
   }
 
-  Future<void> _dispose() async {
+  Future<void> _disposeAgora() async {
     await _agoraEngine.leaveChannel();
     await _agoraEngine.destroy();
   }
@@ -445,7 +444,7 @@ class AgoraVideoView extends StatelessWidget {
               color: Colors.grey.shade900,
               borderRadius: BorderRadius.circular(8.0),
               border: Border.all(
-                color: _user.isAudioEnabled ?? false ? lightBlue : Colors.red,
+                color: _user.isAudioEnabled ?? false ? Colors.blue : Colors.red,
                 width: 2.0,
               ),
             ),

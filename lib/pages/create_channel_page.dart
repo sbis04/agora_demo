@@ -1,6 +1,5 @@
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_agora_demo/res/palette.dart';
 import 'package:flutter_agora_demo/widgets/pre_joining_dialog.dart';
 
 class CreateChannelPage extends StatefulWidget {
@@ -56,6 +55,7 @@ class _CreateChannelPageState extends State<CreateChannelPage> {
     setState(() => _isCreatingChannel = true);
     final input = <String, dynamic>{
       'channelName': _channelNameController.text,
+      'expiryTime': 3600, // 1 hour
     };
     try {
       final response = await FirebaseFunctions.instance
@@ -152,7 +152,7 @@ class _CreateChannelPageState extends State<CreateChannelPage> {
                           decoration: InputDecoration(
                             labelText: 'Channel Name',
                             labelStyle: const TextStyle(
-                              color: lightBlue,
+                              color: Colors.blue,
                               fontSize: 16.0,
                               fontWeight: FontWeight.normal,
                             ),
@@ -164,14 +164,14 @@ class _CreateChannelPageState extends State<CreateChannelPage> {
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderSide: const BorderSide(
-                                color: lightBlue,
+                                color: Colors.blue,
                                 width: 1.0,
                               ),
                               borderRadius: BorderRadius.circular(12.0),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderSide: const BorderSide(
-                                color: lightBlue,
+                                color: Colors.blue,
                                 width: 2.0,
                               ),
                               borderRadius: BorderRadius.circular(12.0),

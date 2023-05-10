@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 class AgoraUser {
   final int uid;
-  final String? userAccount;
   String? name;
   bool? isAudioEnabled;
   bool? isVideoEnabled;
@@ -10,7 +9,6 @@ class AgoraUser {
 
   AgoraUser({
     required this.uid,
-    this.userAccount,
     this.name,
     this.isAudioEnabled,
     this.isVideoEnabled,

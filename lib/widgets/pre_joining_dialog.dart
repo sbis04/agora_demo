@@ -11,12 +11,10 @@ class PreJoiningDialog extends StatefulWidget {
     super.key,
     required this.token,
     required this.channelName,
-    this.isBroadcaster = false,
   });
 
   final String token;
   final String channelName;
-  final bool isBroadcaster;
 
   @override
   State<PreJoiningDialog> createState() => _PreJoiningDialogState();
@@ -52,6 +50,30 @@ class _PreJoiningDialogState extends State<PreJoiningDialog> {
   Future<void> _getPermissions() async {
     await _getMicPermissions();
     await _getCameraPermissions();
+  }
+
+  Future<void> _joinCall() async {
+    setState(() => _isJoining = true);
+    await dotenv.load(fileName: "functions/.env");
+    final appId = dotenv.env['APP_ID'];
+    if (appId == null) {
+      throw Exception('Please add your APP_ID to .env file');
+    }
+    setState(() => _isJoining = false);
+    if (context.mounted) {
+      Navigator.of(context).pop();
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => VideoCallPage(
+            appId: appId,
+            token: widget.token,
+            channelName: widget.channelName,
+            isMicEnabled: _isMicEnabled,
+            isVideoEnabled: _isCameraEnabled,
+          ),
+        ),
+      );
+    }
   }
 
   @override
@@ -152,30 +174,7 @@ class _PreJoiningDialogState extends State<PreJoiningDialog> {
                     child: _isJoining
                         ? const CircularProgressIndicator()
                         : ElevatedButton(
-                            onPressed: () async {
-                              setState(() => _isJoining = true);
-                              await dotenv.load(fileName: "functions/.env");
-                              final appId = dotenv.env['APP_ID'];
-                              if (appId == null) {
-                                throw Exception(
-                                    'Please add your APP_ID to .env file');
-                              }
-                              setState(() => _isJoining = false);
-                              if (context.mounted) {
-                                Navigator.of(context).pop();
-                                await Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (context) => VideoCallPage(
-                                      appId: appId,
-                                      token: widget.token,
-                                      channelName: widget.channelName,
-                                      isMicEnabled: _isMicEnabled,
-                                      isVideoEnabled: _isCameraEnabled,
-                                    ),
-                                  ),
-                                );
-                              }
-                            },
+                            onPressed: _joinCall,
                             child: const Text('Join'),
                           ),
                   ),
